@@ -1,10 +1,9 @@
-using Microsoft.UI.Xaml;
-using AppUIBasics.Helper;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Windows.Storage.Pickers;
+using Microsoft.UI.Xaml;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -21,25 +20,21 @@ namespace App10
             this.InitializeComponent();
         }
 
-        private async void myButton_Click(object sender, RoutedEventArgs e)
+        private async void PickFilesButton_Click(object sender, RoutedEventArgs e)
         {
             // Clear previous returned file name, if it exists, between iterations of this scenario
-            PickFilesOutputTextBlock.Text = "";
+            PickFilesOutputTextBlock.Text = "¿¢¼¿À» ºÒ·¯¿À´Â Áß";
 
             // Create a file picker
-            var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
-
-            // Retrieve the window handle (HWND) of the current WinUI 3 window.
-            var window = WindowHelper.GetWindowForElement(this);
-            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-
-            // Initialize the file picker with the window handle (HWND).
+            var openPicker = new FileOpenPicker();
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
 
             // Set options for your file picker
             openPicker.ViewMode = PickerViewMode.List;
             openPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            openPicker.FileTypeFilter.Add("*");
+            //openPicker.FileTypeFilter.Add("*");
+            openPicker.FileTypeFilter.Add(".xlsx");
 
             // Open the picker for the user to pick a file
             IReadOnlyList<StorageFile> files = await openPicker.PickMultipleFilesAsync();
