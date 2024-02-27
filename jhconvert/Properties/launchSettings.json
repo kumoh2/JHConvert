@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "App10 (Package)": {
+    "jhconvert (Package)": {
       "commandName": "MsixPackage"
     },
-    "App10 (Unpackaged)": {
+    "jhconvert (Unpackaged)": {
       "commandName": "Project"
     }
   }
