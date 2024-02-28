@@ -8,11 +8,11 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="9d1d3012-d591-49b1-a994-41bda62e4888"
+    Name="bb55fa1d-fc3d-432a-83a3-8d28d0a19a6c"
     Publisher="CN=choejaeho"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="9d1d3012-d591-49b1-a994-41bda62e4888" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="bb55fa1d-fc3d-432a-83a3-8d28d0a19a6c" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>jhconvert</DisplayName>
