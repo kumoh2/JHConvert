@@ -1,83 +1,39 @@
-﻿using System;
+﻿using ClosedXML.Excel;
 using System.Data;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.Linq;
 
 public static class ExcelHelper
 {
     public static DataTable LoadExcelIntoDataTable(string filePath, bool firstRowAsColumnNames)
     {
-        DataTable dataTable = new DataTable();
+        DataTable dt = new DataTable();
 
-        using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(filePath, false))
+        using (var workbook = new XLWorkbook(filePath))
         {
-            WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
-            Sheet firstSheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault();
-            WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(firstSheet.Id);
-            SheetData sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
+            var worksheet = workbook.Worksheets.First();
+            var rows = worksheet.RangeUsed().RowsUsed().ToList();
 
-            var rows = sheetData.Elements<Row>().ToList();
-            int columnCount = rows.First().Elements<Cell>().Count();
-
-            if (firstRowAsColumnNames)
+            // 첫 번째 행을 컬럼명으로 사용
+            var headerRow = rows.First();
+            foreach (var cell in headerRow.Cells())
             {
-                var headerRow = rows.First();
-                foreach (Cell cell in headerRow.Elements<Cell>())
-                {
-                    dataTable.Columns.Add(GetCellValue(spreadsheetDocument, cell));
-                }
-                rows = rows.Skip(1).ToList();
-            }
-            else
-            {
-                for (int i = 0; i < columnCount; i++)
-                {
-                    dataTable.Columns.Add($"Column{i + 1}");
-                }
+                dt.Columns.Add(cell.GetValue<string>());
             }
 
-            dataTable.BeginLoadData();
-            foreach (Row row in rows)
+            // 데이터 행 추가
+            dt.BeginLoadData();
+            foreach (var row in rows.Skip(firstRowAsColumnNames ? 1 : 0))
             {
-                DataRow dataRow = dataTable.NewRow();
-                int columnIndex = 0;
-
-                foreach (Cell cell in row.Elements<Cell>())
+                var dataRow = dt.NewRow();
+                for (int i = 0; i < row.Cells().Count(); i++)
                 {
-                    if (columnIndex < dataTable.Columns.Count)
-                    {
-                        dataRow[columnIndex] = GetCellValue(spreadsheetDocument, cell);
-                    }
-                    columnIndex++;
+                    dataRow[i] = row.Cell(i + 1).Value;
                 }
-
-                dataTable.Rows.Add(dataRow);
+                dt.Rows.Add(dataRow);
             }
-            dataTable.EndLoadData();
+            dt.EndLoadData();
         }
 
-        return dataTable;
-    }
-
-    private static string GetCellValue(SpreadsheetDocument document, Cell cell)
-    {
-        string value = cell.CellValue?.InnerText;
-
-        if (cell.DataType != null)
-        {
-            switch (cell.DataType.Value.ToString())
-            {
-                case "s":
-                    var stringTable = document.WorkbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
-                    value = stringTable.SharedStringTable.ElementAt(int.Parse(value)).InnerText;
-                    break;
-                case "b":
-                    value = value == "1" ? "TRUE" : "FALSE";
-                    break;
-            }
-        }
-
-        return value ?? string.Empty;
+        return dt;
     }
 }
