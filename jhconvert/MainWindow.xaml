@@ -11,14 +11,20 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Margin="10">
-            <Button Content="Load Excel" Click="LoadExcel_Click" Margin="0,0,10,0"/>
-            <CheckBox x:Name="FirstRowAsHeader" Content="First Row as Column Names" IsChecked="True"/>
+        <Button Grid.Row="0" Content="Load Excel" Click="LoadExcel_Click" Margin="10"/>
+        
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
+            <TextBlock Text="Column Options" FontWeight="Bold" Margin="0,0,0,10"/>
+            <ListBox x:Name="ColumnOptionsListBox"/>
         </StackPanel>
 
-        <controls:DataGrid x:Name="ExcelDataGrid" Grid.Row="1" AutoGenerateColumns="True" />
+        <StackPanel Grid.Row="2" Orientation="Vertical" Margin="10">
+            <TextBlock Text="Preview" FontWeight="Bold" Margin="0,0,0,10"/>
+            <controls:DataGrid x:Name="ExcelDataGrid"/>
+        </StackPanel>
     </Grid>
 </Window>
