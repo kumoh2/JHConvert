@@ -34,10 +34,9 @@ namespace jhconvert
             if (file != null)
             {
                 var filePath = file.Path;
-                bool firstRowAsColumnNames = false; // Assuming you have a checkbox or some UI to determine this
-                DataTable dataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, firstRowAsColumnNames);
-                DataGridHelper.FillDataGrid(dataTable, ExcelDataGrid);
+                DataTable dataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, true);
                 UpdateColumnOptions(dataTable);
+                DataGridHelper.FillDataGrid(dataTable, ExcelDataGrid);
             }
         }
 
