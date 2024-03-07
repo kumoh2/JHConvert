@@ -15,8 +15,11 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Button Grid.Row="0" Content="Load Excel" Click="LoadExcel_Click" Margin="10"/>
-        
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <Button Content="Load Excel" Click="LoadExcel_Click" Margin="10"/>
+            <Button Content="Export Excel" Click="ExportExcel_Click" Margin="10"/>
+        </StackPanel>
+
         <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
             <TextBlock Text="Column Options" FontWeight="Bold" Margin="0,0,0,10"/>
             <ListBox x:Name="ColumnOptionsListBox"/>

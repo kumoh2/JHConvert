@@ -7,13 +7,17 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using WinRT.Interop;
 using System.Linq;
+using jhconvert.ViewModels;
 
 namespace jhconvert
 {
     public partial class MainWindow : Window
     {
+        public MainWindowViewModel ViewModel { get; }
+
         public MainWindow()
         {
+            ViewModel = new MainWindowViewModel();
             this.InitializeComponent();
         }
 
@@ -33,24 +37,31 @@ namespace jhconvert
             StorageFile file = await picker.PickSingleFileAsync();
             if (file != null)
             {
+                //Excel load start
                 var filePath = file.Path;
                 DataTable dataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, true);
-                UpdateColumnOptions(dataTable);
-                DataGridHelper.FillDataGrid(dataTable, ExcelDataGrid);
+                DataTableHelper.ColumnNametoListBox(dataTable, ColumnOptionsListBox);
+                AddActionsToListBox(ColumnOptionsListBox);
+                DataTableHelper.FillDataGrid(dataTable, ExcelDataGrid);
             }
         }
 
-        private void UpdateColumnOptions(DataTable dataTable)
-        {
-            ColumnOptionsListBox.Items.Clear();
-            for (int i = 0; i < dataTable.Columns.Count; i++)
-            {
-                DataColumn column = dataTable.Columns[i];
+        private void ExportExcel_Click(object sender, RoutedEventArgs e)
+        { 
+        }
 
+        public static void AddActionsToListBox(ListBox listBox)
+        {
+            var items = listBox.Items.Cast<TextBlock>().ToList();
+            listBox.Items.Clear();
+
+            foreach (var columnName in items)
+            {
                 StackPanel optionPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 5, 0, 5) };
 
-                // 순번을 컬럼 이름 앞에 추가
-                TextBlock columnName = new TextBlock { Text = $"{i + 1}. {column.ColumnName}", Width = 150 };
+                // 기존 TextBlock을 StackPanel에 추가
+                optionPanel.Children.Add(columnName);
+
                 ComboBox actionsComboBox = new ComboBox
                 {
                     Width = 100,
@@ -71,7 +82,8 @@ namespace jhconvert
                         case "Pivot":
                             renameTextBox.Visibility = Visibility.Collapsed;
                             pivotComboBox.Visibility = Visibility.Visible;
-                            pivotComboBox.ItemsSource = new ObservableCollection<string>(dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName));
+                            pivotComboBox.ItemsSource = new ObservableCollection<string>(listBox.Items.Cast<StackPanel>()
+                                .Select(panel => ((TextBlock)panel.Children[0]).Text));
                             break;
                         default:
                             renameTextBox.Visibility = Visibility.Collapsed;
@@ -80,12 +92,11 @@ namespace jhconvert
                     }
                 };
 
-                optionPanel.Children.Add(columnName);
                 optionPanel.Children.Add(actionsComboBox);
                 optionPanel.Children.Add(renameTextBox);
                 optionPanel.Children.Add(pivotComboBox);
 
-                ColumnOptionsListBox.Items.Add(optionPanel);
+                listBox.Items.Add(optionPanel);
             }
         }
     }
