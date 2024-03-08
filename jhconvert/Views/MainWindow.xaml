@@ -1,5 +1,5 @@
 <Window
-    x:Class="jhconvert.MainWindow"
+    x:Class="jhconvert.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -22,12 +22,12 @@
 
         <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
             <TextBlock Text="Column Options" FontWeight="Bold" Margin="0,0,0,10"/>
-            <ListBox x:Name="ColumnOptionsListBox"/>
+            <ListBox x:Name="ColumnOptionsListBox" ItemsSource="{Binding ColumnOptions}" />
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Vertical" Margin="10">
             <TextBlock Text="Preview" FontWeight="Bold" Margin="0,0,0,10"/>
-            <controls:DataGrid x:Name="ExcelDataGrid"/>
+            <controls:DataGrid x:Name="ExcelDataGrid" ItemsSource="{Binding ExcelData}" />
         </StackPanel>
     </Grid>
 </Window>
