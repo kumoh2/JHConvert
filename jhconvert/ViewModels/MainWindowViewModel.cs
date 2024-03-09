@@ -14,14 +14,7 @@ namespace jhconvert.ViewModels
 {
     public class MainWindowViewModel
     {
-        public ObservableCollection<StackPanel> ColumnOptions { get; set; }
-        public ObservableCollection<object> ExcelData { get; set; }
-
-        public MainWindowViewModel()
-        {
-            ColumnOptions = new ObservableCollection<StackPanel>();
-            ExcelData = new ObservableCollection<object>();
-        }
+        private DataTable originalDataTable;
 
         public async Task LoadExcel(IntPtr hwnd, ListBox columnOptionsListBox, DataGrid excelDataGrid)
         {
@@ -40,10 +33,10 @@ namespace jhconvert.ViewModels
             {
                 // Excel load start
                 var filePath = file.Path;
-                DataTable dataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, true);
-                DataTableHelper.ColumnNametoListBox(dataTable, columnOptionsListBox);
-                AddActionsToListBox(columnOptionsListBox);
-                DataTableHelper.FillDataGrid(dataTable, excelDataGrid);
+                originalDataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, true);
+                DataTableHelper.ColumnNametoListBox(originalDataTable, columnOptionsListBox);
+                AddActionsToListBox(columnOptionsListBox, excelDataGrid);
+                DataTableHelper.FillDataGrid(originalDataTable, excelDataGrid);
             }
         }
 
@@ -52,7 +45,7 @@ namespace jhconvert.ViewModels
             // Export Excel logic
         }
 
-        public static void AddActionsToListBox(ListBox listBox)
+        public void AddActionsToListBox(ListBox listBox, DataGrid dataGrid)
         {
             var items = listBox.Items.Cast<TextBlock>().ToList();
             listBox.Items.Clear();
@@ -72,7 +65,7 @@ namespace jhconvert.ViewModels
                 };
                 TextBox renameTextBox = new TextBox { Width = 100, Visibility = Visibility.Collapsed };
                 ComboBox pivotComboBox = new ComboBox { Width = 100, Visibility = Visibility.Collapsed };
-
+                var viewModel = this;
                 actionsComboBox.SelectionChanged += (s, e) =>
                 {
                     switch (actionsComboBox.SelectedItem as string)
@@ -92,7 +85,13 @@ namespace jhconvert.ViewModels
                             pivotComboBox.Visibility = Visibility.Collapsed;
                             break;
                     }
+
+                    // 모든 ComboBox의 상태를 확인하여 처리
+                    viewModel.ProcessColumns(listBox, dataGrid);
                 };
+
+                renameTextBox.TextChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
+                pivotComboBox.SelectionChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
 
                 optionPanel.Children.Add(actionsComboBox);
                 optionPanel.Children.Add(renameTextBox);
@@ -100,6 +99,78 @@ namespace jhconvert.ViewModels
 
                 listBox.Items.Add(optionPanel);
             }
+        }
+
+        private void ProcessColumns(ListBox listBox, DataGrid dataGrid)
+        {
+            if (originalDataTable != null)
+            {
+                DataTable modifiedDataTable = originalDataTable.Copy();
+
+                foreach (var panel in listBox.Items.Cast<StackPanel>())
+                {
+                    var columnName = ((TextBlock)panel.Children[0]).Text;
+                    var action = ((ComboBox)panel.Children[1]).SelectedItem as string;
+                    var renameTextBox = (TextBox)panel.Children[2];
+                    var pivotComboBox = (ComboBox)panel.Children[3];
+
+                    switch (action)
+                    {
+                        case "Keep":
+                            // 아무 작업도 하지 않음
+                            break;
+                        case "Pivot":
+                            var pivotColumnName = pivotComboBox.SelectedItem as string;
+                            if (!string.IsNullOrEmpty(pivotColumnName))
+                            {
+                                modifiedDataTable = AddPivotColumn(modifiedDataTable, columnName, pivotColumnName);
+                            }
+                            break;
+                        case "Delete":
+                            if (modifiedDataTable.Columns.Contains(columnName))
+                            {
+                                modifiedDataTable.Columns.Remove(columnName);
+                            }
+                            break;
+                        case "Rename":
+                            var newColumnName = renameTextBox.Text;
+                            if (!string.IsNullOrEmpty(newColumnName) && modifiedDataTable.Columns.Contains(columnName))
+                            {
+                                modifiedDataTable.Columns[columnName].ColumnName = newColumnName;
+                            }
+                            break;
+                    }
+                }
+
+                DataTableHelper.FillDataGrid(modifiedDataTable, dataGrid);
+            }
+        }
+
+        private DataTable AddPivotColumn(DataTable dataTable, string sourceColumnName, string targetColumnName)
+        {
+            if (dataTable.Columns.Contains(sourceColumnName) && dataTable.Columns.Contains(targetColumnName))
+            {
+                DataTable newDataTable = dataTable.Clone();
+
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    // 원본 행을 추가
+                    newDataTable.ImportRow(row);
+
+                    // 피벗 행을 추가
+                    DataRow pivotRow = newDataTable.NewRow();
+                    pivotRow.ItemArray = row.ItemArray.Clone() as object[];
+                    pivotRow[targetColumnName] = row[sourceColumnName];
+                    newDataTable.Rows.Add(pivotRow);
+                }
+
+                // 피벗 컬럼 삭제
+                newDataTable.Columns.Remove(sourceColumnName);
+
+                return newDataTable;
+            }
+
+            return dataTable;
         }
     }
 }
