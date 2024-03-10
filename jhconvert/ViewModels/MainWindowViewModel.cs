@@ -77,8 +77,11 @@ namespace jhconvert.ViewModels
                         case "Pivot":
                             renameTextBox.Visibility = Visibility.Collapsed;
                             pivotComboBox.Visibility = Visibility.Visible;
-                            pivotComboBox.ItemsSource = new ObservableCollection<string>(listBox.Items.Cast<StackPanel>()
-                                .Select(panel => ((TextBlock)panel.Children[0]).Text));
+                            pivotComboBox.ItemsSource = new ObservableCollection<string>(
+                                listBox.Items.Cast<StackPanel>()
+                                    .Select(panel => ((TextBlock)panel.Children[0]).Text)
+                                    .Where(name => name != columnName.Text && !IsColumnDeleted(listBox, name))
+                            );
                             break;
                         default:
                             renameTextBox.Visibility = Visibility.Collapsed;
@@ -99,6 +102,21 @@ namespace jhconvert.ViewModels
 
                 listBox.Items.Add(optionPanel);
             }
+        }
+
+        private bool IsColumnDeleted(ListBox listBox, string columnName)
+        {
+            foreach (var panel in listBox.Items.Cast<StackPanel>())
+            {
+                var currentColumnName = ((TextBlock)panel.Children[0]).Text;
+                var action = ((ComboBox)panel.Children[1]).SelectedItem as string;
+
+                if (currentColumnName == columnName && action == "Delete")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void ProcessColumns(ListBox listBox, DataGrid dataGrid)
