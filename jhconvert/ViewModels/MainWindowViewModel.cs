@@ -60,11 +60,11 @@ namespace jhconvert.ViewModels
                 ComboBox actionsComboBox = new ComboBox
                 {
                     Width = 100,
-                    ItemsSource = new ObservableCollection<string> { "Keep", "Pivot", "Rename", "Delete" },
+                    ItemsSource = new ObservableCollection<string> { "Keep", "ColToNewRow", "Rename", "Delete" },
                     SelectedIndex = 0
                 };
                 TextBox renameTextBox = new TextBox { Width = 100, Visibility = Visibility.Collapsed };
-                ComboBox pivotComboBox = new ComboBox { Width = 100, Visibility = Visibility.Collapsed };
+                ComboBox ColToNewRowComboBox = new ComboBox { Width = 100, Visibility = Visibility.Collapsed };
                 var viewModel = this;
                 actionsComboBox.SelectionChanged += (s, e) =>
                 {
@@ -72,12 +72,12 @@ namespace jhconvert.ViewModels
                     {
                         case "Rename":
                             renameTextBox.Visibility = Visibility.Visible;
-                            pivotComboBox.Visibility = Visibility.Collapsed;
+                            ColToNewRowComboBox.Visibility = Visibility.Collapsed;
                             break;
-                        case "Pivot":
+                        case "ColToNewRow":
                             renameTextBox.Visibility = Visibility.Collapsed;
-                            pivotComboBox.Visibility = Visibility.Visible;
-                            pivotComboBox.ItemsSource = new ObservableCollection<string>(
+                            ColToNewRowComboBox.Visibility = Visibility.Visible;
+                            ColToNewRowComboBox.ItemsSource = new ObservableCollection<string>(
                                 listBox.Items.Cast<StackPanel>()
                                     .Select(panel => ((TextBlock)panel.Children[0]).Text)
                                     .Where(name => name != columnName.Text && !IsColumnDeleted(listBox, name))
@@ -85,7 +85,7 @@ namespace jhconvert.ViewModels
                             break;
                         default:
                             renameTextBox.Visibility = Visibility.Collapsed;
-                            pivotComboBox.Visibility = Visibility.Collapsed;
+                            ColToNewRowComboBox.Visibility = Visibility.Collapsed;
                             break;
                     }
 
@@ -94,11 +94,11 @@ namespace jhconvert.ViewModels
                 };
 
                 renameTextBox.TextChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
-                pivotComboBox.SelectionChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
+                ColToNewRowComboBox.SelectionChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
 
                 optionPanel.Children.Add(actionsComboBox);
                 optionPanel.Children.Add(renameTextBox);
-                optionPanel.Children.Add(pivotComboBox);
+                optionPanel.Children.Add(ColToNewRowComboBox);
 
                 listBox.Items.Add(optionPanel);
             }
@@ -130,18 +130,18 @@ namespace jhconvert.ViewModels
                     var columnName = ((TextBlock)panel.Children[0]).Text;
                     var action = ((ComboBox)panel.Children[1]).SelectedItem as string;
                     var renameTextBox = (TextBox)panel.Children[2];
-                    var pivotComboBox = (ComboBox)panel.Children[3];
+                    var ColToNewRowComboBox = (ComboBox)panel.Children[3];
 
                     switch (action)
                     {
                         case "Keep":
                             // 아무 작업도 하지 않음
                             break;
-                        case "Pivot":
-                            var pivotColumnName = pivotComboBox.SelectedItem as string;
-                            if (!string.IsNullOrEmpty(pivotColumnName))
+                        case "ColToNewRow":
+                            var ColToNewRowColumnName = ColToNewRowComboBox.SelectedItem as string;
+                            if (!string.IsNullOrEmpty(ColToNewRowColumnName))
                             {
-                                modifiedDataTable = AddPivotColumn(modifiedDataTable, columnName, pivotColumnName);
+                                modifiedDataTable = AddColToNewRowColumn(modifiedDataTable, columnName, ColToNewRowColumnName);
                             }
                             break;
                         case "Delete":
@@ -164,7 +164,7 @@ namespace jhconvert.ViewModels
             }
         }
 
-        private DataTable AddPivotColumn(DataTable dataTable, string sourceColumnName, string targetColumnName)
+        private DataTable AddColToNewRowColumn(DataTable dataTable, string sourceColumnName, string targetColumnName)
         {
             if (dataTable.Columns.Contains(sourceColumnName) && dataTable.Columns.Contains(targetColumnName))
             {
