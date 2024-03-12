@@ -11,13 +11,13 @@ public static class ExcelHelper
         using (var workbook = new XLWorkbook(filePath))
         {
             var worksheet = workbook.Worksheets.First();
-            var rows = worksheet.RangeUsed().RowsUsed().ToList();
+            var rows = worksheet.RangeUsed().RowsUsed();
 
             // 첫 번째 행을 컬럼명으로 사용
             var headerRow = rows.First();
             foreach (var cell in headerRow.Cells())
             {
-                dt.Columns.Add(cell.GetValue<string>());
+                dt.Columns.Add(cell.GetString());
             }
 
             // 데이터 행 추가
@@ -27,7 +27,7 @@ public static class ExcelHelper
                 var dataRow = dt.NewRow();
                 for (int i = 0; i < row.Cells().Count(); i++)
                 {
-                    dataRow[i] = row.Cell(i + 1).Value;
+                    dataRow[i] = row.Cell(i + 1).GetValue<string>();
                 }
                 dt.Rows.Add(dataRow);
             }

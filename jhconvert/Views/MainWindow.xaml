@@ -11,23 +11,40 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="7*"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
-            <Button Content="Load Excel" Click="LoadExcel_Click" Margin="10"/>
-            <Button Content="Export Excel" Click="ExportExcel_Click" Margin="10"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="Load Excel" Click="LoadExcel_Click" Margin="10"/>
+            <Button Grid.Column="1" Content="Export Excel" Click="ExportExcel_Click" Margin="10"/>
+        </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
-            <TextBlock Text="Column Options" FontWeight="Bold" Margin="0,0,0,10"/>
-            <ListBox x:Name="ColumnOptionsListBox" ItemsSource="{Binding ColumnOptions}" />
-        </StackPanel>
+        <Grid Grid.Row="1" Grid.Column="0" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="Column Options" FontWeight="Bold" Margin="0,0,0,10"/>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ListBox x:Name="ColumnOptionsListBox" ItemsSource="{Binding ColumnOptions}" />
+            </ScrollViewer>
+        </Grid>
 
-        <StackPanel Grid.Row="2" Orientation="Vertical" Margin="10">
-            <TextBlock Text="Preview" FontWeight="Bold" Margin="0,0,0,10"/>
-            <controls:DataGrid x:Name="ExcelDataGrid" ItemsSource="{Binding ExcelData}" />
-        </StackPanel>
+        <Grid Grid.Row="1" Grid.Column="1" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="Preview" FontWeight="Bold" Margin="0,0,0,10"/>
+            <controls:DataGrid Grid.Row="1" x:Name="ExcelDataGrid" ItemsSource="{Binding ExcelData}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
     </Grid>
 </Window>

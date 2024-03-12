@@ -32,8 +32,8 @@ namespace jhconvert.ViewModels
             if (file != null)
             {
                 // Excel load start
-                var filePath = file.Path;
-                originalDataTable = ExcelHelper.LoadExcelIntoDataTable(filePath, true);
+                var filePath = file.Path; 
+                originalDataTable = await Task.Run(() => ExcelHelper.LoadExcelIntoDataTable(filePath, true));
                 DataTableHelper.ColumnNametoListBox(originalDataTable, columnOptionsListBox);
                 AddActionsToListBox(columnOptionsListBox, excelDataGrid);
                 DataTableHelper.FillDataGrid(originalDataTable, excelDataGrid);
