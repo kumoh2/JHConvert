@@ -45,7 +45,6 @@
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Text="Preview" FontWeight="Bold" Margin="0,0,0,10"/>
             <controls:DataGrid Grid.Row="1" x:Name="ExcelDataGrid" ItemsSource="{Binding ExcelData}" HorizontalAlignment="Stretch" AlternatingRowBackground="WhiteSmoke" VerticalAlignment="Stretch"/>
-            <ProgressRing IsActive="{Binding IsLoading}" Visibility="{Binding LoadingVisibility}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Height="100" />
         </Grid>
     </Grid>
 </Window>
