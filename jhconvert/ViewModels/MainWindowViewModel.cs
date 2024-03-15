@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
@@ -37,6 +38,7 @@ namespace jhconvert.ViewModels
                 DataTableHelper.ColumnNametoListBox(originalDataTable, columnOptionsListBox);
                 AddActionsToListBox(columnOptionsListBox, excelDataGrid);
                 DataTableHelper.FillDataGrid(originalDataTable, excelDataGrid);
+                //excelDataGrid.Source = originalDataTable.DefaultView;
             }
         }
 
@@ -60,63 +62,43 @@ namespace jhconvert.ViewModels
                 ComboBox actionsComboBox = new ComboBox
                 {
                     Width = 100,
-                    ItemsSource = new ObservableCollection<string> { "Keep", "ColToNewRow", "Rename", "Delete" },
+                    ItemsSource = new ObservableCollection<string> { "Keep", "ColToNewRow" },
                     SelectedIndex = 0
                 };
-                TextBox renameTextBox = new TextBox { Width = 100, Visibility = Visibility.Collapsed };
                 ComboBox ColToNewRowComboBox = new ComboBox { Width = 100, Visibility = Visibility.Collapsed };
                 var viewModel = this;
                 actionsComboBox.SelectionChanged += (s, e) =>
                 {
                     switch (actionsComboBox.SelectedItem as string)
                     {
-                        case "Rename":
-                            renameTextBox.Visibility = Visibility.Visible;
-                            ColToNewRowComboBox.Visibility = Visibility.Collapsed;
-                            break;
                         case "ColToNewRow":
-                            renameTextBox.Visibility = Visibility.Collapsed;
                             ColToNewRowComboBox.Visibility = Visibility.Visible;
                             ColToNewRowComboBox.ItemsSource = new ObservableCollection<string>(
                                 listBox.Items.Cast<StackPanel>()
                                     .Select(panel => ((TextBlock)panel.Children[0]).Text)
-                                    .Where(name => name != columnName.Text && !IsColumnDeleted(listBox, name))
+                                    .Where(name => name != columnName.Text)
                             );
                             break;
                         default:
-                            renameTextBox.Visibility = Visibility.Collapsed;
                             ColToNewRowComboBox.Visibility = Visibility.Collapsed;
                             break;
                     }
 
-                    // 모든 ComboBox의 상태를 확인하여 처리
+                    if (actionsComboBox.SelectedItem as string == "ColToNewRow" && string.IsNullOrEmpty(ColToNewRowComboBox.SelectedItem as string))
+                    {
+                        return; // ColToNewRowComboBox가 비어있으면 이벤트 종료
+                    }
+
                     viewModel.ProcessColumns(listBox, dataGrid);
                 };
 
-                renameTextBox.TextChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
                 ColToNewRowComboBox.SelectionChanged += (s, e) => viewModel.ProcessColumns(listBox, dataGrid);
 
                 optionPanel.Children.Add(actionsComboBox);
-                optionPanel.Children.Add(renameTextBox);
                 optionPanel.Children.Add(ColToNewRowComboBox);
 
                 listBox.Items.Add(optionPanel);
             }
-        }
-
-        private bool IsColumnDeleted(ListBox listBox, string columnName)
-        {
-            foreach (var panel in listBox.Items.Cast<StackPanel>())
-            {
-                var currentColumnName = ((TextBlock)panel.Children[0]).Text;
-                var action = ((ComboBox)panel.Children[1]).SelectedItem as string;
-
-                if (currentColumnName == columnName && action == "Delete")
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private void ProcessColumns(ListBox listBox, DataGrid dataGrid)
@@ -129,8 +111,7 @@ namespace jhconvert.ViewModels
                 {
                     var columnName = ((TextBlock)panel.Children[0]).Text;
                     var action = ((ComboBox)panel.Children[1]).SelectedItem as string;
-                    var renameTextBox = (TextBox)panel.Children[2];
-                    var ColToNewRowComboBox = (ComboBox)panel.Children[3];
+                    var ColToNewRowComboBox = (ComboBox)panel.Children[2];
 
                     switch (action)
                     {
@@ -144,19 +125,6 @@ namespace jhconvert.ViewModels
                                 modifiedDataTable = AddColToNewRowColumn(modifiedDataTable, columnName, ColToNewRowColumnName);
                             }
                             break;
-                        case "Delete":
-                            if (modifiedDataTable.Columns.Contains(columnName))
-                            {
-                                modifiedDataTable.Columns.Remove(columnName);
-                            }
-                            break;
-                        case "Rename":
-                            var newColumnName = renameTextBox.Text;
-                            if (!string.IsNullOrEmpty(newColumnName) && modifiedDataTable.Columns.Contains(columnName))
-                            {
-                                modifiedDataTable.Columns[columnName].ColumnName = newColumnName;
-                            }
-                            break;
                     }
                 }
 
@@ -168,24 +136,33 @@ namespace jhconvert.ViewModels
         {
             if (dataTable.Columns.Contains(sourceColumnName) && dataTable.Columns.Contains(targetColumnName))
             {
-                DataTable newDataTable = dataTable.Clone();
+                // 새로운 DataTable을 생성하지 않고, 원본 DataTable에 추가합니다.
+                List<DataRow> newRows = new List<DataRow>();
 
                 foreach (DataRow row in dataTable.Rows)
                 {
-                    // 원본 행을 추가
-                    newDataTable.ImportRow(row);
+                    // 원본 행을 추가할 때는 그대로 둡니다.
+                    DataRow newRow = dataTable.NewRow();
+                    newRow.ItemArray = row.ItemArray.Clone() as object[];
+                    newRows.Add(newRow);
 
-                    // 피벗 행을 추가
-                    DataRow pivotRow = newDataTable.NewRow();
+                    // 피벗 행을 추가합니다.
+                    DataRow pivotRow = dataTable.NewRow();
                     pivotRow.ItemArray = row.ItemArray.Clone() as object[];
                     pivotRow[targetColumnName] = row[sourceColumnName];
-                    newDataTable.Rows.Add(pivotRow);
+                    newRows.Add(pivotRow);
                 }
 
-                // 피벗 컬럼 삭제
-                newDataTable.Columns.Remove(sourceColumnName);
+                // 새로운 행들을 원본 DataTable에 추가합니다.
+                foreach (var newRow in newRows)
+                {
+                    dataTable.Rows.Add(newRow);
+                }
 
-                return newDataTable;
+                // 원본 컬럼을 제거합니다.
+                dataTable.Columns.Remove(sourceColumnName);
+
+                return dataTable;
             }
 
             return dataTable;

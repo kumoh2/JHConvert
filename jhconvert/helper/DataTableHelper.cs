@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 using System.Data;
 using Microsoft.UI.Xaml.Controls;
+using System.Collections.Generic;
 
 public static class DataTableHelper
 {
@@ -11,21 +12,26 @@ public static class DataTableHelper
     {
         grid.Columns.Clear();
         grid.AutoGenerateColumns = false;
+
+        // DataGridTextColumn 객체를 리스트에 미리 생성하여 저장
+        var columns = new List<DataGridTextColumn>(table.Columns.Count);
+
         for (int i = 0; i < table.Columns.Count; i++)
         {
-            grid.Columns.Add(new DataGridTextColumn()
+            // 캐싱 없이 Binding을 직접 사용
+            columns.Add(new DataGridTextColumn
             {
                 Header = table.Columns[i].ColumnName,
-                Binding = new Binding { Path = new PropertyPath("[" + i.ToString() + "]") }
+                Binding = new Binding { Path = new PropertyPath($"[{i}]") }
             });
         }
 
-        var collection = new ObservableCollection<object>();
-        foreach (DataRow row in table.Rows)
+        foreach (var column in columns)
         {
-            collection.Add(row.ItemArray);
+            grid.Columns.Add(column);
         }
 
+        var collection = new ObservableCollection<object>(table.AsEnumerable().Select(row => row.ItemArray));
         grid.ItemsSource = collection;
     }
 
