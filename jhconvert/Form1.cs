@@ -10,10 +10,11 @@ namespace WinFormsApp4
         public Form1()
         {
             InitializeComponent();
-            checkedListBox1.ItemCheck += CheckedListBox1_ItemCheck; 
+            checkedListBox1.ItemCheck += CheckedListBox1_ItemCheck;
             dataGridView1.RowPostPaint += dataGridView1_RowPostPaint;
             textBox1.KeyPress += textBox1_KeyPress;
             textBox1.TextChanged += textBox1_TextChanged;
+            comboBox1.SelectedIndexChanged += ComboBox1_SelectedIndexChanged;
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -45,6 +46,9 @@ namespace WinFormsApp4
 
         private async void button1_Click(object sender, EventArgs e)
         {
+            // 초기화
+            ResetForm();
+
             using (var openFileDialog = new OpenFileDialog
             {
                 Filter = "Excel Files|*.xls;*.xlsx;*.xlsm;*.xlsb|All Files|*.*"
@@ -88,9 +92,25 @@ namespace WinFormsApp4
                 var rows = worksheet.RangeUsed().RowsUsed();
 
                 var headerRow = rows.First();
+                var columnNames = new HashSet<string>();
                 foreach (var cell in headerRow.Cells())
                 {
-                    dt.Columns.Add(cell.GetString());
+                    // 줄바꿈 문자 제거
+                    string columnName = cell.GetString().Replace("\n", "").Replace("\r", "");
+
+                    // 중복된 컬럼 이름 처리
+                    if (columnNames.Contains(columnName))
+                    {
+                        int suffix = 2; // 2부터 시작
+                        string newColumnName;
+                        do
+                        {
+                            newColumnName = $"{columnName} #{suffix++}";
+                        } while (columnNames.Contains(newColumnName));
+                        columnName = newColumnName;
+                    }
+                    columnNames.Add(columnName);
+                    dt.Columns.Add(columnName);
                 }
 
                 dt.BeginLoadData();
@@ -166,15 +186,30 @@ namespace WinFormsApp4
             comboBox1.Items.Clear();
             foreach (DataColumn column in dataTable.Columns)
             {
-                checkedListBox1.Items.Add(column.ColumnName);
-                comboBox1.Items.Add(column.ColumnName);
+                // 줄바꿈 문자 제거
+                string columnName = column.ColumnName.Replace("\n", "").Replace("\r", "");
+                checkedListBox1.Items.Add(columnName);
+                comboBox1.Items.Add(columnName);
             }
+        }
+
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            checkedListBox1.Items.Clear();
+
+            foreach (DataColumn column in originalDataTable.Columns)
+            {
+                // 줄바꿈 문자 제거
+                string columnName = column.ColumnName.Replace("\n", "").Replace("\r", "");
+                checkedListBox1.Items.Add(columnName);
+            }
+
+            dataGridView1.DataSource = null;
+            dataGridView1.DataSource = originalDataTable;
         }
 
         private void CheckedListBox1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            if (comboBox1.SelectedItem == null) return;
-
             var selectedColumn = comboBox1.SelectedItem.ToString();
             var checkedColumns = checkedListBox1.CheckedItems.Cast<string>().ToList();
 
@@ -217,6 +252,18 @@ namespace WinFormsApp4
             }
 
             dataGridView1.DataSource = updatedDataTable;
+        }
+
+        private void ResetForm()
+        {
+            // 원본 데이터 테이블 초기화
+            originalDataTable = null;
+            dataGridView1.DataSource = null;
+
+            // UI 초기화
+            checkedListBox1.Items.Clear();
+            comboBox1.Items.Clear();
+            textBox1.Text = "99999999";
         }
     }
 }
