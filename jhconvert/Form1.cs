@@ -206,6 +206,7 @@ namespace WinFormsApp4
 
             dataGridView1.DataSource = null;
             dataGridView1.DataSource = originalDataTable;
+            ScrollToSelectedColumn(comboBox1.SelectedItem.ToString());
         }
 
         private void CheckedListBox1_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -252,6 +253,7 @@ namespace WinFormsApp4
             }
 
             dataGridView1.DataSource = updatedDataTable;
+            ScrollToSelectedColumn(selectedColumn);
         }
 
         private void ResetForm()
@@ -264,6 +266,15 @@ namespace WinFormsApp4
             checkedListBox1.Items.Clear();
             comboBox1.Items.Clear();
             textBox1.Text = "99999999";
+        }
+
+        private void ScrollToSelectedColumn(string columnName)
+        {
+            var column = dataGridView1.Columns[columnName];
+            if (column != null)
+            {
+                dataGridView1.FirstDisplayedScrollingColumnIndex = column.Index;
+            }
         }
     }
 }
