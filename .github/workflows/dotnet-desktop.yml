@@ -32,7 +32,7 @@ jobs:
       run: dotnet build jhconvert.sln --configuration ${{ matrix.configuration }}
 
     - name: Publish
-      run: dotnet publish jhconvert/jhconvert.csproj --configuration ${{ matrix.configuration }} --output ./publish /p:PublishSingleFile=true /p:RuntimeIdentifier=win-x64 /p:ReadyToRun=true /p:DebugType=none
+      run: dotnet publish jhconvert/jhconvert.csproj --configuration ${{ matrix.configuration }} --output ./publish /p:PublishSingleFile=true /p:RuntimeIdentifier=win-x64 /p:SelfContained=true /p:ReadyToRun=true /p:DebugType=none
 
     - name: Archive published files
       uses: actions/upload-artifact@v3
